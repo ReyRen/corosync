@@ -159,7 +159,7 @@ static int uid_determine (const char *req_user)
 
 	pwdbuffer = malloc (pwdlinelen);
 
-	while ((rc = getpwuid_r (req_user, pwdptr, pwdbuffer, pwdlinelen, &temp_pwd_pt)) == ERANGE) {
+	while ((rc = getpwuid_r (id, pwdptr, pwdbuffer, pwdlinelen, &temp_pwd_pt)) == ERANGE) {
 		char *n;
 
 		pwdlinelen *= 2;
