@@ -135,7 +135,7 @@ static int read_config_file_into_icmap(
 	const char **error_string, icmap_map_t config_map);
 static char error_string_response[512];
 
-static int uid_valid (int num_uid, long int id, char *req_user)
+static int uid_valid (int num_uid, long int id, const char *req_user)
 {
 	int pw_uid = 0;
 	struct passwd passwd;
