@@ -135,7 +135,7 @@ static int read_config_file_into_icmap(
 	const char **error_string, icmap_map_t config_map);
 static char error_string_response[512];
 
-static int uid_determine (const char *req_user)
+static int uid_valid (int num_uid, long int id, char *req_user)
 {
 	int pw_uid = 0;
 	struct passwd passwd;
@@ -143,23 +143,21 @@ static int uid_determine (const char *req_user)
 	struct passwd* temp_pwd_pt;
 	char *pwdbuffer;
 	int  pwdlinelen, rc;
-	long int id;
-	char *ep;
-
-	id = strtol(req_user, &ep, 10);
-	if (*req_user == '\0' || *ep != '\0' || id < 0 || id > UINT_MAX) {
-		return (-1);
-	}
 
 	pwdlinelen = sysconf (_SC_GETPW_R_SIZE_MAX);
 
 	if (pwdlinelen == -1) {
-	        pwdlinelen = 256;
+		pwdlinelen = 256;
 	}
 
 	pwdbuffer = malloc (pwdlinelen);
-
-	while ((rc = getpwuid_r ((uid_t)id, pwdptr, pwdbuffer, pwdlinelen, &temp_pwd_pt)) == ERANGE) {
+	if (num_uid)
+	{
+		rc = getpwuid_r ((uid_t)id, pwdptr, pwdbuffer, pwdlinelen, &temp_pwd_pt);
+	} else {
+		rc = getpwnam_r (req_user, pwdptr, pwdbuffer, pwdlinelen, &temp_pwd_pt);
+	}
+	while (rc == ERANGE) {
 		char *n;
 
 		pwdlinelen *= 2;
@@ -171,22 +169,42 @@ static int uid_determine (const char *req_user)
 			}
 		}
 	}
+
 	if (rc != 0) {
 		free (pwdbuffer);
-	        sprintf (error_string_response, "getpwnam_r(): %s", strerror(rc));
-	        return (-1);
+		sprintf (error_string_response, "getpwnam_r(): %s", strerror(rc));
+		return (-1);
 	}
 	if (temp_pwd_pt == NULL) {
 		free (pwdbuffer);
-	        sprintf (error_string_response,
-	                "The '%s' user is not found in /etc/passwd, please read the documentation.",
-	                req_user);
-	        return (-1);
+		if (num_uid) {
+			sprintf (error_string_response,
+				"The UID '%ld' user is not found in /etc/passwd, please read the documentation.",
+				id);
+		} else {
+			sprintf (error_string_response,
+				"The '%s' user is not found in /etc/passwd, please read the documentation.",
+				req_user);
+		}
+		return (-1);
 	}
 	pw_uid = passwd.pw_uid;
 	free (pwdbuffer);
 
 	return pw_uid;
+}
+
+static int uid_determine (const char *req_user)
+{
+	long int id;
+	char *ep;
+
+	id = strtol(req_user, &ep, 10);
+	if (*req_user != '\0' && *ep == '\0' && id >= 0 && id <= UINT_MAX) {
+		return uid_valid(1, id, NULL);
+	}
+
+	return uid_valid(0, 0, req_user);
 }
 
 static int gid_determine (const char *req_group)
