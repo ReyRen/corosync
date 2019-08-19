@@ -207,7 +207,7 @@ static int uid_determine (const char *req_user)
 	return uid_valid(0, 0, req_user);
 }
 
-static int gid_determine (const char *req_group)
+static int gid_valid (int num_gid, long int id, const char *req_group)
 {
 	int corosync_gid = 0;
 	struct group group;
@@ -215,23 +215,22 @@ static int gid_determine (const char *req_group)
 	struct group * temp_grp_pt;
 	char *grpbuffer;
 	int  grplinelen, rc;
-	long int id;
-	char *ep;
-
-	id = strtol(req_group, &ep, 10);
-	if (*req_group != '\0' && *ep == '\0' && id >= 0 && id <= UINT_MAX) {
-		return (id);
-	}
 
 	grplinelen = sysconf (_SC_GETGR_R_SIZE_MAX);
 
 	if (grplinelen == -1) {
-	        grplinelen = 256;
+		grplinelen = 256;
 	}
 
 	grpbuffer = malloc (grplinelen);
 
-	while ((rc = getgrnam_r (req_group, grpptr, grpbuffer, grplinelen, &temp_grp_pt)) == ERANGE) {
+	if (num_gid) {
+		rc = getgrgid_r ((gid_t)id, grpptr, grpbuffer, grplinelen, &temp_grp_pt);
+	} else {
+		rc = getgrnam_r (req_group, grpptr, grpbuffer, grplinelen, &temp_grp_pt);
+	}
+
+	while (rc == ERANGE) {
 		char *n;
 
 		grplinelen *= 2;
@@ -245,14 +244,21 @@ static int gid_determine (const char *req_group)
 	}
 	if (rc != 0) {
 		free (grpbuffer);
-	        sprintf (error_string_response, "getgrnam_r(): %s", strerror(rc));
-	        return (-1);
+		sprintf (error_string_response, "getgrnam_r(): %s", strerror(rc));
+		return (-1);
 	}
 	if (temp_grp_pt == NULL) {
 		free (grpbuffer);
-	        sprintf (error_string_response,
-	                "The '%s' group is not found in /etc/group, please read the documentation.",
-	                req_group);
+		if (num_gid) {
+			sprintf (error_string_response,
+				"The GID '%ld' group is not found in /etc/group, please read the documentation.",
+				id);
+		} else {
+
+			sprintf (error_string_response,
+				"The '%s' group is not found in /etc/group, please read the documentation.",
+				req_group);
+		}
 		return (-1);
 	}
 	corosync_gid = group.gr_gid;
@@ -260,6 +266,20 @@ static int gid_determine (const char *req_group)
 
 	return corosync_gid;
 }
+
+static int gid_determine (const char *req_group)
+{
+	long int id;
+	char *ep;
+
+	id = strtol(req_group, &ep, 10);
+	if (*req_group != '\0' && *ep == '\0' && id >= 0 && id <= UINT_MAX) {
+		return gid_valid(1, id, NULL);
+	}
+
+	return gid_valid(0, 0, req_group);
+}
+
 static char *strchr_rs (const char *haystack, int byte)
 {
 	const char *end_address = strchr (haystack, byte);
