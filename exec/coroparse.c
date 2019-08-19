@@ -147,8 +147,8 @@ static int uid_determine (const char *req_user)
 	char *ep;
 
 	id = strtol(req_user, &ep, 10);
-	if (*req_user != '\0' && *ep == '\0' && id >= 0 && id <= UINT_MAX) {
-		return (id);
+	if (*req_user == '\0' || *ep != '\0' || id < 0 || id > UINT_MAX) {
+		return (-1);
 	}
 
 	pwdlinelen = sysconf (_SC_GETPW_R_SIZE_MAX);
@@ -159,7 +159,7 @@ static int uid_determine (const char *req_user)
 
 	pwdbuffer = malloc (pwdlinelen);
 
-	while ((rc = getpwnam_r (req_user, pwdptr, pwdbuffer, pwdlinelen, &temp_pwd_pt)) == ERANGE) {
+	while ((rc = getpwuid_r (req_user, pwdptr, pwdbuffer, pwdlinelen, &temp_pwd_pt)) == ERANGE) {
 		char *n;
 
 		pwdlinelen *= 2;
