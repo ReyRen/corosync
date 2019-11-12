@@ -858,6 +858,8 @@ void *passive_instance_initialize (
 {
 	struct passive_instance *instance;
 	int i;
+  log_printf(rrp_instance->totemrrp_log_level_debug,
+             "passive_instance_initialize start");
 
 	instance = malloc (sizeof (struct passive_instance));
 	if (instance == 0) {
