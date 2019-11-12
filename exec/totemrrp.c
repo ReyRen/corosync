@@ -858,8 +858,8 @@ void *passive_instance_initialize (
 {
 	struct passive_instance *instance;
 	int i;
-  log_printf(rrp_instance->totemrrp_log_level_debug,
-             "passive_instance_initialize start");
+        log_printf(rrp_instance->totemrrp_log_level_debug,
+			"passive_instance_initialize start");
 
 	instance = malloc (sizeof (struct passive_instance));
 	if (instance == 0) {
@@ -1896,12 +1896,13 @@ static int totemrrp_algorithm_set (
 {
 	unsigned int res = -1;
 	unsigned int i;
+	struct totemrrp_instance *rrp_instance = instance;
 
-        log_printf(instance->totemrrp_log_level_debug, "totemrrp_algo_set start");
+        log_printf(rrp_instance->totemrrp_log_level_debug, "totemrrp_algo_set start");
 	for (i = 0; i < RRP_ALGOS_COUNT; i++) {
 		if (strcmp (totem_config->rrp_mode, rrp_algos[i]->name) == 0) {
 			instance->rrp_algo = rrp_algos[i];
-                        log_printf(instance->totemrrp_log_level_debug, "totemrrp_algo_set start %d", i);
+                        log_printf(rrp_instance->totemrrp_log_level_debug, "totemrrp_algo_set start %d", i);
 			if (rrp_algos[i]->initialize) {
 				instance->rrp_algo_instance = rrp_algos[i]->initialize (
 					instance,
