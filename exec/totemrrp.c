@@ -2103,6 +2103,16 @@ int totemrrp_initialize (
 	stats->rrp = &instance->stats;
 	instance->stats.interface_count = totem_config->interface_count;
 	instance->stats.faulty = calloc(instance->stats.interface_count, sizeof(uint8_t));
+	/*
+	* Configure logging
+	*/
+	instance->totemrrp_log_level_security = totem_config->totem_logging_configuration.log_level_security;
+	instance->totemrrp_log_level_error = totem_config->totem_logging_configuration.log_level_error;
+	instance->totemrrp_log_level_warning = totem_config->totem_logging_configuration.log_level_warning;
+	instance->totemrrp_log_level_notice = totem_config->totem_logging_configuration.log_level_notice;
+	instance->totemrrp_log_level_debug = totem_config->totem_logging_configuration.log_level_debug;
+	instance->totemrrp_subsys_id = totem_config->totem_logging_configuration.log_subsys_id;
+	instance->totemrrp_log_printf = totem_config->totem_logging_configuration.log_printf;
 
 	res = totemrrp_algorithm_set (
 		instance->totem_config,
