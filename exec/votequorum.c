@@ -1477,7 +1477,9 @@ static char *votequorum_readconfig(int runtime)
 	 * validate quorum device votes vs expected_votes
 	 */
 
+  log_printf(LOGSYS_LEVEL_DEBUG, "TTTTTTTTTTTTTTTTexpected_votes=%d, TTTTTTTTTTTTqdevice_votes=%d", expected_votes, qdevice_votes);
 	if ((qdevice_votes > 0) && (expected_votes)) {
+      log_printf(LOGSYS_LEVEL_DEBUG, "FFFFFFFFFFFFFFFFFFFFFFFFFexpected_votes=%d, FFFFFFFFFqdevice_votes=%d", expected_votes, qdevice_votes);
 		int delta = expected_votes - qdevice_votes;
 		if (delta < 2) {
 			if (!runtime) {
